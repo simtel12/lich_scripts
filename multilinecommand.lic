@@ -1,0 +1,68 @@
+
+toggle_unique
+upstreamHookName = 'multiline-command'
+def sendDownstream(val)
+end
+
+class MultilineCommand
+	def MultilineCommand.getLines(input)
+		strings = input.split("#{$lich_char}#{$lich_char}")
+		strings.each { |s| s.chomp! }
+	end
+end
+
+if scrToKill = (Script.running).select { |val| val.name == "multilinecommand" }
+	scrToKill.each { |scr| if scr != Script.current then scr.kill() end }
+end
+
+action = proc { |client_string|
+	if client_string =~ /^(?:<c>)?#{$lich_char}.*/
+		client_string  #we don't want to eat script commands
+	elsif client_string =~ /^(?:<c>)?([^#{$lich_char}]+#{$lich_char}#{$lich_char}.+)/
+		capture = $1
+		retVal = nil
+		if scr = (Script.running).find { |val| val.name == "multilinecommand" }
+			strings = MultilineCommand.getLines($1)
+			if strings.length > 1
+				for i in 0..(strings.length-1)
+					act = strings[i]
+					scr.unique_buffer.shove("#{act}") #if this script is still running send the command
+				end	
+				nil
+			else
+				strings[0]
+			end
+		else
+			UpstreamHook.remove(upstreamHookName) #if the script isnt running remove the hook
+			client_string
+		end
+	else
+		client_string #No split-char
+	end
+}
+
+UpstreamHook.remove(upstreamHookName)
+UpstreamHook.add(upstreamHookName, action)
+
+before_dying {
+	UpstreamHook.remove(upstreamHookName);
+	Object.send(:remove_const, :MultilineCommand)
+}
+
+while line = unique_get
+	begin
+		put line
+	rescue Exception
+		echo $!
+		echo $!.backtrace.first
+		sleep 1
+	rescue ThreadError
+		echo $!
+		echo $!.backtrace.first
+		sleep 1
+	rescue
+		echo $!
+		echo $!.backtrace.first
+		sleep 1	
+	end
+end

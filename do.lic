@@ -1,0 +1,14 @@
+
+localVars = Array.new(script.vars)
+while true
+	for i in 1..(localVars.length()-1) do
+		action = localVars[i]
+		if defined?(MultilineCommand.getLines)
+			actions = MultilineCommand.getLines(action)
+			actions.each {|x| fput "#{x}"}
+		else
+			fput "#{action}"
+		end
+		waitrt
+	end
+end

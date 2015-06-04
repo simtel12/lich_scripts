@@ -1,0 +1,106 @@
+
+
+unless XMLData.game =~ /^(?:DRF|DR|DRPlat)$/
+	echo "This script is meant for DragonRealms Prime, Platinum, or Fallen.  It will likely cause problems on whatever game you're trying to run it on..."
+	exit
+end
+
+unless (running? "drinfomon")
+	echo "This script requires the utility script drinfomon to be running."
+	exit
+end
+
+
+shards = {
+	"Dor'na'torna" => ["Dornatorna", "Hibarnhvidar", "Hib", "Cherulisa"],
+	"Dinegavren" => ["Therenborough", "Theren"]
+}
+
+starting_locations = {
+    "the silvery-white shard Dor'na'torna" => "Dor'na'torna",
+    "the silvery-white shard Erekinzil" => "Erekinzil",
+    "the silvery-white shard Besoge" => "Besoge",
+    "the silvery-white shard Auilusi" => "Auilusi",
+    "the silvery-white shard Tabelrem" => "Tabelrem",
+    '\[Cragstone Vale, Shrine of the Shell\]' => "Tamigen",
+    "the silvery-white shard Rolagi" => "Rolagi",
+    "the silvery-white shard Marendin" => "Marendin",
+    "the silvery-white shard Emalerje" => "Emalerje",
+    "the silvery shard Asharshpar'i" => "Asharshpar'i",
+    '\[Gealeranendae College, Tear of Grazhir Exhibit\]'	=> "Dinegavren",
+    '\[Phelim\'s Sanctum, Tear of Grazhir\]' => "Mintais",
+    "the silvery-white shard Taniendar" => "Taniendar",
+	"Obvious exits:" => "fail",
+	"Obvious paths:" => "fail"
+}
+
+knownDestination = true
+usage:
+if !script.vars[1] or !knownDestination
+	echo
+	echo "=============================================="
+	echo '= Astral Travel script by Foresee, edited by Uversy'
+	echo '= Last edited: 6/3/15'
+	echo '= Edited by: Thyatir'
+	echo '= Version 3.1'
+	echo '='
+	echo '= ***Include 100 as the 4th variable to use 100th ability***'
+	echo '='
+	echo '= Valid Destination names:'
+	echo "= Dor'na'torna - Dornatorna - Hibarnhvidar - Hib - Cherulisa"
+	echo "= Erekinzil - Taisgath - Ratha - Lomtaun - Cartman - Undarverjah - Underweargnome"
+	echo "= Tamigen - Raven'sPoint - RavenPoint - Raven - RP"
+	echo "= Rolagi - Crossing - Xing - Kssarh"
+	echo "= Marendin - Shard - Ilithi - Mortom"
+	echo "= Emalerje - Volcano - LesserFist - Fist - Tiv"
+	echo "= Asharshpar'i - Asharshpari - LethDeriel - Leth"
+	echo "= Dinegavren - Therenborough - Theren"
+	echo "= Mintais - ThroneCity - Throne - TC"
+	echo "= Taniendar - Riverhaven - Haven - Gylwyn"
+	echo "= Besoge - M'riss - Mriss - Mer'kresh - Merkresh"
+	echo "= Tabelrem - Muspar'i - Muspari - Tablerum"
+	echo "= Auilusi - Aesry"
+	echo "=============================================="
+	echo
+	exit
+end
+
+destInput = script.vars[1]
+destination = nil
+shards.each do |k, v|
+	echo "Considering: #{k} => #{v}"
+	if k.casecmp(destInput) == 0 or v.find { |x| x.casecmp(destInput) == 0 } then
+		destination = k
+	end
+end
+
+unless destination
+	knownDestination = false
+	goto "usage"
+end
+
+timesToHarness ||= script.vars[2]
+timesToHarness ||= 3
+mana = script.vars[3]
+mana ||= 15
+stepsToAxis = 0
+stepsFromAxis = 0
+
+echo "Destination: #{destination}, Amount: #{mana}, Times: #{timesToHarness}"
+
+shard_matches = []
+starting_locations.each do |location, shard| 
+	shard_matches.push(location)
+end
+
+put "look"
+start_shard = waitfor shard_matches.join("|")
+starting_locations.each { |l, s| if start_shard =~ /#{l}/ then start_shard = s end }
+
+if start_shard == "fail"
+	echo "Unable to determine what shard you're starting at."
+	exit
+else
+	#start_shard = starting_locations[start_shard]
+end
+echo "Starting location: #{start_shard}"
